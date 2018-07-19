@@ -1,0 +1,16 @@
+<beans>
+    <import resources="resources/email-context"/>
+
+    <bean id="userService" class="com.vlad.ioc.service.UserService">
+        <property name="mailService" ref="mailService1"/>
+    </bean>
+
+    <bean id="paymentWithMaxService" class="com.vlad.ioc.service.PaymentService">
+        <property name="maxAmount" value="5000"/>
+        <property name="mailService" ref="mailService2"/>
+    </bean>
+
+    <bean id="paymentService" class="com.vlad.ioc.service.PaymentService">
+        <property name="mailService" ref="mailService3"/>
+    </bean>
+</beans>

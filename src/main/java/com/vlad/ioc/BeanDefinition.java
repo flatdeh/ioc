@@ -6,7 +6,7 @@ public class BeanDefinition {
     private String id;
     private String beanClassName;
     private Map<String, String> dependencies;
-    private Map<String, String> refDependencies;
+    private Map<String, Object> refDependencies;
 
     public String getId() {
         return id;
@@ -32,11 +32,11 @@ public class BeanDefinition {
         this.dependencies = dependencies;
     }
 
-    public Map<String, String> getRefDependencies() {
+    public Map<String, Object> getRefDependencies() {
         return refDependencies;
     }
 
-    public void setRefDependencies(Map<String, String> refDependencies) {
+    public void setRefDependencies(Map<String, Object> refDependencies) {
         this.refDependencies = refDependencies;
     }
 }
