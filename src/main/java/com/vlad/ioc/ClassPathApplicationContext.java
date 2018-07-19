@@ -1,5 +1,7 @@
 package com.vlad.ioc;
 
+
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,21 +52,24 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
             beans.add(bean);
         }
         injectDependencies();
+        injectRefDependencies();
     }
 
     private void injectDependencies() {
         for (BeanDefinition beanDefinition : beanDefinitions) {
 
             for (Bean bean : beans) {
-                if (beanDefinition.getId().equals(bean.getId())){
+                if (beanDefinition.getId().equals(bean.getId())) {
                     Map<String, String> dependenciesMap = beanDefinition.getDependencies();
-                    for(Map.Entry<String, String> entry : dependenciesMap.entrySet()) {
-                        String key = entry.getKey();
+                    for (Map.Entry<String, String> entry : dependenciesMap.entrySet()) {
+                        String field = entry.getKey();
                         String value = entry.getValue();
 
                         try {
-                            bean.getValue().getClass().getMethod("setId", int.class);
-                        } catch (NoSuchMethodException e) {
+                            String methodName = concatSetMethodName(field);
+                            Method method = bean.getValue().getClass().getMethod(methodName, int.class);
+                            method.invoke(bean.getValue(), Integer.parseInt(value));
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
@@ -73,7 +78,30 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
         }
     }
 
-    private void injectRefDependencies() {
+    private String concatSetMethodName(String field) {
+        return "set" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
+    }
 
+    private void injectRefDependencies() {
+        for (BeanDefinition beanDefinition : beanDefinitions) {
+
+            for (Bean bean : beans) {
+                if (beanDefinition.getId().equals(bean.getId())) {
+                    Map<String, Object> refDependenciesMap = beanDefinition.getRefDependencies();
+                    for (Map.Entry<String, Object> entry : refDependenciesMap.entrySet()) {
+                        String field = entry.getKey();
+                        Object ref = entry.getValue();
+
+                        try {
+                            String methodName = concatSetMethodName(field);
+                            Method method = bean.getValue().getClass().getMethod(methodName, Object.class);
+                            method.invoke(bean.getValue(), ref);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
     }
 }
