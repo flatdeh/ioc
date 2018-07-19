@@ -1,4 +1,6 @@
-package com.vlad.ioc;
+package com.vlad.ioc.context;
+
+import com.vlad.ioc.definition.BeanDefinitionReader;
 
 import java.util.List;
 

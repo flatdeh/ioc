@@ -1,4 +1,7 @@
-package com.vlad.ioc;
+package com.vlad.ioc.definition;
+
+import com.vlad.ioc.definition.BeanDefinition;
+import com.vlad.ioc.definition.BeanDefinitionReader;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.*;

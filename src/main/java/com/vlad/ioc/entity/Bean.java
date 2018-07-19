@@ -1,4 +1,4 @@
-package com.vlad.ioc;
+package com.vlad.ioc.entity;
 
 public class Bean {
     private Object value;

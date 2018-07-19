@@ -1,5 +1,7 @@
 package com.vlad.ioc;
 
+import com.vlad.ioc.definition.BeanDefinition;
+import com.vlad.ioc.definition.XMLBeanDefinitionReader;
 import org.junit.Test;
 
 import java.util.List;

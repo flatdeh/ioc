@@ -1,4 +1,4 @@
-package com.vlad.ioc;
+package com.vlad.ioc.definition;
 
 import java.util.Map;
 

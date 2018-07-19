@@ -1,5 +1,8 @@
-package com.vlad.ioc;
+package com.vlad.ioc.context;
 
+import com.vlad.ioc.definition.BeanDefinition;
+import com.vlad.ioc.definition.BeanDefinitionReader;
+import com.vlad.ioc.entity.Bean;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
