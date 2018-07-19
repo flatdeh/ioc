@@ -9,7 +9,7 @@ public interface ApplicationContext<T> {
 
     T getBean(String name, Class<T> clazz);
 
-    Object getBean(String name);
+    T getBean(String name);
 
     List<String> getBeanNames();
 

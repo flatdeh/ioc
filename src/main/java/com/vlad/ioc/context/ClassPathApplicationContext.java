@@ -16,19 +16,38 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
     private List<BeanDefinition> beanDefinitions;
 
     public T getBean(Class<T> clazz) {
+        for (Bean bean : beans) {
+            if (bean.getValue().getClass().getSimpleName().equals(clazz.getName())) {
+                return (T) bean.getValue();
+            }
+        }
         return null;
     }
 
     public T getBean(String name, Class<T> clazz) {
+        for (Bean bean : beans) {
+            if (bean.getValue().getClass().getSimpleName().equals(clazz.getName()) && bean.getId().equals(name)) {
+                return (T) bean.getValue();
+            }
+        }
         return null;
     }
 
-    public Object getBean(String name) {
+    public T getBean(String name) {
+        for (Bean bean : beans) {
+            if (bean.getId().equals(name)) {
+                return (T) bean.getValue();
+            }
+        }
         return null;
     }
 
     public List<String> getBeanNames() {
-        return null;
+        List<String> beansNames = new ArrayList<>();
+        for (Bean bean : beans) {
+            beansNames.add(bean.getId());
+        }
+        return beansNames;
     }
 
     private void getBeanDefinitionFromBeanDefinitionReader() {
