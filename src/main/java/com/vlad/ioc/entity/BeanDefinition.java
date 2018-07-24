@@ -1,4 +1,4 @@
-package com.vlad.ioc.definition;
+package com.vlad.ioc.entity;
 
 import java.util.Map;
 
@@ -6,7 +6,7 @@ public class BeanDefinition {
     private String id;
     private String beanClassName;
     private Map<String, String> dependencies;
-    private Map<String, Object> refDependencies;
+    private Map<String, String> refDependencies;
 
     public String getId() {
         return id;
@@ -32,11 +32,11 @@ public class BeanDefinition {
         this.dependencies = dependencies;
     }
 
-    public Map<String, Object> getRefDependencies() {
+    public Map<String, String> getRefDependencies() {
         return refDependencies;
     }
 
-    public void setRefDependencies(Map<String, Object> refDependencies) {
+    public void setRefDependencies(Map<String, String> refDependencies) {
         this.refDependencies = refDependencies;
     }
 }

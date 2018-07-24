@@ -1,7 +1,7 @@
 package com.vlad.ioc.context;
 
-import com.vlad.ioc.definition.BeanDefinition;
-import com.vlad.ioc.definition.BeanDefinitionReader;
+import com.vlad.ioc.entity.BeanDefinition;
+import com.vlad.ioc.reader.BeanDefinitionReader;
 import com.vlad.ioc.entity.Bean;
 
 import java.lang.reflect.Method;
@@ -9,34 +9,43 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
-    //private String[] path;
+public class ClassPathApplicationContext implements ApplicationContext {
+    private String[] paths;
     private BeanDefinitionReader reader;
     private List<Bean> beans = new ArrayList<>();
     private List<BeanDefinition> beanDefinitions;
 
-    public T getBean(Class<T> clazz) {
+    public ClassPathApplicationContext(String[] paths, BeanDefinitionReader reader) {
+        this.paths = paths;
+        this.reader = reader;
+        getBeanDefinitionsFromBeanDefinitionReader();
+        createBeansFromBeanDefinitions();
+        injectDependencies();
+        injectRefDependencies();
+    }
+
+    public <T> T getBean(Class<T> clazz) {
         for (Bean bean : beans) {
-            if (bean.getValue().getClass().getSimpleName().equals(clazz.getName())) {
-                return (T) bean.getValue();
+            if (bean.getValue().getClass().getName().equals(clazz.getName())) {
+                return (T) bean;
             }
         }
         return null;
     }
 
-    public T getBean(String name, Class<T> clazz) {
+    public <T> T getBean(String id, Class<T> clazz) {
         for (Bean bean : beans) {
-            if (bean.getValue().getClass().getSimpleName().equals(clazz.getName()) && bean.getId().equals(name)) {
-                return (T) bean.getValue();
+            if (bean.getValue().getClass().getName().equals(clazz.getName()) && bean.getId().equals(id)) {
+                return (T) bean;
             }
         }
         return null;
     }
 
-    public T getBean(String name) {
+    public <T> T getBean(String id) {
         for (Bean bean : beans) {
-            if (bean.getId().equals(name)) {
-                return (T) bean.getValue();
+            if (bean.getId().equals(id)) {
+                return (T) bean;
             }
         }
         return null;
@@ -50,16 +59,12 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
         return beansNames;
     }
 
-    private void getBeanDefinitionFromBeanDefinitionReader() {
-        this.beanDefinitions = reader.readBeanDefinitions();
+    private void getBeanDefinitionsFromBeanDefinitionReader() {
+        this.beanDefinitions = reader.readBeanDefinitions(this.paths);
     }
 
-    public void setBeanDefinitionReader(BeanDefinitionReader beanDefinitionReader) {
-        this.reader = beanDefinitionReader;
-    }
 
     public void createBeansFromBeanDefinitions() {
-        getBeanDefinitionFromBeanDefinitionReader();
         for (BeanDefinition beanDefinition : beanDefinitions) {
             Bean bean = new Bean();
             bean.setId(beanDefinition.getId());
@@ -73,13 +78,10 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
             }
             beans.add(bean);
         }
-        injectDependencies();
-        injectRefDependencies();
     }
 
-    private void injectDependencies() {
+    void injectDependencies() {
         for (BeanDefinition beanDefinition : beanDefinitions) {
-
             for (Bean bean : beans) {
                 if (beanDefinition.getId().equals(bean.getId())) {
                     Map<String, String> dependenciesMap = beanDefinition.getDependencies();
@@ -87,12 +89,21 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
                         String field = entry.getKey();
                         String value = entry.getValue();
 
+                        String setterMethodName = createSetterMethodName(field);
+
                         try {
-                            String methodName = concatSetMethodName(field);
-                            Method method = bean.getValue().getClass().getMethod(methodName, int.class);
-                            method.invoke(bean.getValue(), Integer.parseInt(value));
+                            Method[] methods = bean.getValue().getClass().getMethods();
+                            for (Method method : methods) {
+                                if (method.getName().equals(setterMethodName)) {
+                                    Class parameter = method.getParameterTypes()[0];
+
+                                    Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
+                                    Object castValue = castValueToParameterType(parameter, value);
+                                    setterMethod.invoke(bean.getValue(), castValue);
+                                }
+                            }
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            throw new RuntimeException("\"" + setterMethodName + "\" not found!", e);
                         }
                     }
                 }
@@ -100,30 +111,59 @@ public class ClassPathApplicationContext<T> implements ApplicationContext<T> {
         }
     }
 
-    private String concatSetMethodName(String field) {
+    private Object castValueToParameterType(Class parameter, String value) {
+        if (parameter == int.class) {
+            return Integer.parseInt(value);
+        } else if (parameter == String.class) {
+            return value;
+        } else {
+            throw new RuntimeException("Unknown parameter type: \"" + value + "\"");
+        }
+    }
+
+    String createSetterMethodName(String field) {
         return "set" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
     }
 
-    private void injectRefDependencies() {
+    void injectRefDependencies() {
         for (BeanDefinition beanDefinition : beanDefinitions) {
-
             for (Bean bean : beans) {
                 if (beanDefinition.getId().equals(bean.getId())) {
-                    Map<String, Object> refDependenciesMap = beanDefinition.getRefDependencies();
-                    for (Map.Entry<String, Object> entry : refDependenciesMap.entrySet()) {
+                    Map<String, String> refDependenciesMap = beanDefinition.getRefDependencies();
+                    for (Map.Entry<String, String> entry : refDependenciesMap.entrySet()) {
                         String field = entry.getKey();
-                        Object ref = entry.getValue();
+                        String ref = entry.getValue();
 
+                        Bean refBean = getBean(ref);
+                        Object refBeanValue = refBean.getValue();
+                        if (refBeanValue == null) {
+                            throw new RuntimeException("Bean with id= " + ref + " not found!");
+                        }
+
+                        String setterMethodName = createSetterMethodName(field);
                         try {
-                            String methodName = concatSetMethodName(field);
-                            Method method = bean.getValue().getClass().getMethod(methodName, Object.class);
-                            method.invoke(bean.getValue(), ref);
+                            Method[] methods = bean.getValue().getClass().getMethods();
+                            for (Method method : methods) {
+                                if (method.getName().equals(setterMethodName)) {
+                                    Class parameter = method.getParameterTypes()[0];
+                                    if (parameter == refBeanValue.getClass()) {
+                                        Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
+                                        setterMethod.invoke(bean.getValue(), refBeanValue);
+                                    } else {
+                                        throw new RuntimeException("Can't invoke method \"" + setterMethodName + "\", different classes");
+                                    }
+                                }
+                            }
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            throw new RuntimeException("\"" + setterMethodName + "\" not found!");
                         }
                     }
                 }
             }
         }
+    }
+
+    List<Bean> getBeans() {
+        return beans;
     }
 }
