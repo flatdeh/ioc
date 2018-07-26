@@ -1,4 +1,4 @@
-package com.vlad.ioc.reader.xml;
+package com.vlad.ioc.reader.xml.stax;
 
 import com.vlad.ioc.entity.BeanDefinition;
 import com.vlad.ioc.reader.BeanDefinitionReader;
@@ -15,7 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class XMLBeanDefinitionReader implements BeanDefinitionReader {
+public class StaxXmlBeanDefinitionReader implements BeanDefinitionReader {
+    private XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+    private int classNameCount;
 
     public List<BeanDefinition> readBeanDefinitions(String[] paths) {
         List<BeanDefinition> beanDefinitionList = new ArrayList<>();
@@ -23,10 +25,9 @@ public class XMLBeanDefinitionReader implements BeanDefinitionReader {
         Map<String, String> dependenciesMap = null;
         Map<String, String> refDependenciesMap = null;
 
-        XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
         for (String path : paths) {
-            try {
-                XMLEventReader xmlEventReader = xmlInputFactory.createXMLEventReader(new FileInputStream(path));
+            try (BufferedReader xmlFileBufferedReader = new BufferedReader(new FileReader(path))) {
+                XMLEventReader xmlEventReader = xmlInputFactory.createXMLEventReader(xmlFileBufferedReader);
                 while (xmlEventReader.hasNext()) {
                     XMLEvent xmlEvent = xmlEventReader.nextEvent();
                     if (xmlEvent.isStartElement()) {
@@ -39,18 +40,21 @@ public class XMLBeanDefinitionReader implements BeanDefinitionReader {
                             refDependenciesMap = new HashMap<>();
                             beanDefinition = new BeanDefinition();
 
-                            Attribute attributeByName = startElement.getAttributeByName(new QName("id"));
-                            if (attributeByName != null) {
-                                beanDefinition.setId(attributeByName.getValue());
-                            } else {
-                                throw new RuntimeException("Can't find bean id, in XML file" + path);
-                            }
 
-                            attributeByName = startElement.getAttributeByName(new QName("class"));
+                            Attribute attributeByName = startElement.getAttributeByName(new QName("class"));
                             if (attributeByName != null) {
                                 beanDefinition.setBeanClassName(attributeByName.getValue());
                             } else {
-                                throw new RuntimeException("Can't find bean class, in XML file" + path);
+                                attributeByName = startElement.getAttributeByName(new QName("id"));
+                                throw new RuntimeException("Can't find bean class, in XML file" + path + ", for bean id= " + attributeByName);
+                            }
+
+                            attributeByName = startElement.getAttributeByName(new QName("id"));
+                            if (attributeByName != null) {
+                                beanDefinition.setId(attributeByName.getValue());
+                            } else {
+                                String createDefaultId = beanDefinition.getBeanClassName() + "$" + (classNameCount++);
+                                beanDefinition.setId(createDefaultId);
                             }
 
                         } else if ("property".equals(xmlTagName)) {
@@ -64,9 +68,11 @@ public class XMLBeanDefinitionReader implements BeanDefinitionReader {
                                 } else if (nameAttr != null && refAttr != null) {
                                     refDependenciesMap.put(nameAttr.getValue(), refAttr.getValue());
                                 } else {
+                                    //todo: add custom bean parse excepton
                                     throw new RuntimeException("Property attribute not correct, in XML file" + path);
                                 }
                             } else {
+                                //todo: add custom bean parse excepton
                                 throw new RuntimeException("Can't find bean for property " +
                                         xmlTagName + " in XML file: " + path);
                             }
@@ -85,10 +91,10 @@ public class XMLBeanDefinitionReader implements BeanDefinitionReader {
                     }
                 }
 
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException("Can't find XML file: " + path, e);
             } catch (XMLStreamException e) {
                 throw new RuntimeException("Unexpected error, can't parse XML file: " + path, e);
+            } catch (IOException e) {
+                throw new RuntimeException("Can't find XML file: " + path, e);
             }
         }
         return beanDefinitionList;
