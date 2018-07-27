@@ -4,7 +4,6 @@ import com.vlad.ioc.entity.Bean;
 import com.vlad.ioc.entity.BeanDefinition;
 import com.vlad.ioc.exception.BeanInjectDependenciesException;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -16,7 +15,6 @@ public class ValueInjector extends Injector {
         Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
         Object castValue = castValueToParameterType(parameter, value);
         setterMethod.invoke(bean.getValue(), castValue);
-
     }
 
     @Override

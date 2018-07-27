@@ -12,7 +12,6 @@ import java.util.Map;
 public class RefInjector extends Injector {
     @Override
     public void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-
         Bean refBean = getBean(beans, value);
         Object refBeanValue = refBean.getValue();
         if (refBeanValue == null) {
@@ -25,7 +24,6 @@ public class RefInjector extends Injector {
         } else {
             throw new BeanInjectDependenciesException("Can't invoke method \"" + setterMethodName + "\", different classes");
         }
-
     }
 
     @Override
@@ -41,5 +39,4 @@ public class RefInjector extends Injector {
         }
         return null;
     }
-
 }
