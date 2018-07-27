@@ -51,7 +51,7 @@ public class RefInjector extends Injector {
     private  <T> T getBean(List<Bean> beans, String id) {
         for (Bean bean : beans) {
             if (bean.getId().equals(id)) {
-                return (T) bean;
+                return (T) bean.getValue();
             }
         }
         return null;

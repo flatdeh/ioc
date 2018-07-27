@@ -17,8 +17,21 @@ import java.util.List;
 import java.util.Map;
 
 public class StaxXmlBeanDefinitionReader implements BeanDefinitionReader {
+    private String[] paths;
     private XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     private int classNameCount;
+
+    public StaxXmlBeanDefinitionReader() {
+    }
+
+    public StaxXmlBeanDefinitionReader(String[] paths) {
+        this.paths = paths;
+    }
+
+    @Override
+    public List<BeanDefinition> readBeanDefinitions() {
+        return readBeanDefinitions(this.paths);
+    }
 
     public List<BeanDefinition> readBeanDefinitions(String[] paths) {
         List<BeanDefinition> beanDefinitionList = new ArrayList<>();

@@ -8,18 +8,7 @@ import groovy.util.GroovyTestSuite;
 import static org.junit.Assert.assertEquals;
 
 public class ClassPath {
-    @Test
-    def 'asfdf'(){
 
-    }
-
-    @Test
-    void indexOutOfBoundsAccess() {
-        def numbers = [1,2,3,4]
-        shouldFail {
-            numbers.get(4)
-        }
-    }
 
 
 }

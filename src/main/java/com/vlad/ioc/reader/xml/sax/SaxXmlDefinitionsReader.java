@@ -14,6 +14,19 @@ import java.util.List;
 public class SaxXmlDefinitionsReader implements BeanDefinitionReader {
     private SAXParserFactory factory = SAXParserFactory.newInstance();
     private SaxXmlParser saxXmlParser = new SaxXmlParser();
+    private String[] paths;
+
+    public SaxXmlDefinitionsReader() {
+    }
+
+    public SaxXmlDefinitionsReader(String[] paths) {
+        this.paths = paths;
+    }
+
+    @Override
+    public List<BeanDefinition> readBeanDefinitions() {
+        return readBeanDefinitions(this.paths);
+    }
 
     @Override
     public List<BeanDefinition> readBeanDefinitions(String[] paths) {

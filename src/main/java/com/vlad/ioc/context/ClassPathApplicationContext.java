@@ -6,21 +6,25 @@ import com.vlad.ioc.injector.RefInjector;
 import com.vlad.ioc.injector.ValueInjector;
 import com.vlad.ioc.reader.BeanDefinitionReader;
 import com.vlad.ioc.entity.Bean;
+import com.vlad.ioc.reader.xml.sax.SaxXmlDefinitionsReader;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClassPathApplicationContext implements ApplicationContext {
-    private String[] paths;
     private BeanDefinitionReader reader;
     private List<Bean> beans = new ArrayList<>();
     private List<BeanDefinition> beanDefinitions;
 
-    public ClassPathApplicationContext(String[] paths) {
-        this.paths = paths;
+    public ClassPathApplicationContext() {
     }
 
-    private void start() {
+    public ClassPathApplicationContext(String[] paths) {
+        setReader(new SaxXmlDefinitionsReader(paths));
+        start();
+    }
+
+    public void start() {
         parseBeanDefinitionsFromBeanDefinitionReader();
         createBeansFromBeanDefinitions();
 
@@ -31,7 +35,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     public <T> T getBean(Class<T> clazz) {
         for (Bean bean : beans) {
             if (bean.getValue().getClass().equals(clazz)) {
-                return (T) bean;
+                return clazz.cast(bean.getValue());
             }
         }
         return null;
@@ -40,7 +44,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     public <T> T getBean(String id, Class<T> clazz) {
         for (Bean bean : beans) {
             if (bean.getValue().getClass().equals(clazz) && bean.getId().equals(id)) {
-                return (T) bean;
+                return clazz.cast(bean.getValue());
             }
         }
         return null;
@@ -49,7 +53,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     public <T> T getBean(String id) {
         for (Bean bean : beans) {
             if (bean.getId().equals(id)) {
-                return (T) bean;
+                return (T) bean.getValue();
             }
         }
         return null;
@@ -64,7 +68,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
     private void parseBeanDefinitionsFromBeanDefinitionReader() {
-        this.beanDefinitions = reader.readBeanDefinitions(this.paths);
+        this.beanDefinitions = reader.readBeanDefinitions();
     }
 
 
@@ -96,10 +100,6 @@ public class ClassPathApplicationContext implements ApplicationContext {
 
     public void setReader(BeanDefinitionReader reader) {
         this.reader = reader;
-        start();
     }
 
-    List<Bean> getBeans() {
-        return beans;
-    }
 }
