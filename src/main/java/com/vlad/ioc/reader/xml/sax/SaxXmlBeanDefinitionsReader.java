@@ -11,15 +11,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class SaxXmlDefinitionsReader implements BeanDefinitionReader {
+public class SaxXmlBeanDefinitionsReader implements BeanDefinitionReader {
     private SAXParserFactory factory = SAXParserFactory.newInstance();
     private SaxXmlParser saxXmlParser = new SaxXmlParser();
     private String[] paths;
 
-    public SaxXmlDefinitionsReader() {
+    public SaxXmlBeanDefinitionsReader() {
     }
 
-    public SaxXmlDefinitionsReader(String[] paths) {
+    public SaxXmlBeanDefinitionsReader(String[] paths) {
         this.paths = paths;
     }
 

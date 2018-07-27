@@ -2,11 +2,12 @@ package com.vlad.ioc.context;
 
 import com.vlad.ioc.entity.BeanDefinition;
 import com.vlad.ioc.exception.BeanInstantiationException;
+import com.vlad.ioc.exception.NotUniqueBeanException;
 import com.vlad.ioc.injector.RefInjector;
 import com.vlad.ioc.injector.ValueInjector;
 import com.vlad.ioc.reader.BeanDefinitionReader;
 import com.vlad.ioc.entity.Bean;
-import com.vlad.ioc.reader.xml.sax.SaxXmlDefinitionsReader;
+import com.vlad.ioc.reader.xml.sax.SaxXmlBeanDefinitionsReader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
     public ClassPathApplicationContext(String[] paths) {
-        setReader(new SaxXmlDefinitionsReader(paths));
+        setReader(new SaxXmlBeanDefinitionsReader(paths));
         start();
     }
 
@@ -33,9 +34,17 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
     public <T> T getBean(Class<T> clazz) {
+        T resultBeanValue;
+        boolean isFound = false;
         for (Bean bean : beans) {
             if (bean.getValue().getClass().equals(clazz)) {
-                return clazz.cast(bean.getValue());
+                if (!isFound) {
+                    resultBeanValue = clazz.cast(bean.getValue());
+                    isFound = true;
+                } else {
+                    throw new NotUniqueBeanException("Beans with class:" + clazz + ", more than one!");
+                }
+
             }
         }
         return null;
