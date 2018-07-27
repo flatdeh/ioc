@@ -34,7 +34,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
     public <T> T getBean(Class<T> clazz) {
-        T resultBeanValue;
+        T resultBeanValue =null;
         boolean isFound = false;
         for (Bean bean : beans) {
             if (bean.getValue().getClass().equals(clazz)) {
@@ -47,7 +47,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
 
             }
         }
-        return null;
+        return resultBeanValue;
     }
 
     public <T> T getBean(String id, Class<T> clazz) {
