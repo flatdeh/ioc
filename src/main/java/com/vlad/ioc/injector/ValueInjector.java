@@ -2,6 +2,7 @@ package com.vlad.ioc.injector;
 
 import com.vlad.ioc.entity.Bean;
 import com.vlad.ioc.entity.BeanDefinition;
+import com.vlad.ioc.exception.BeanInjectDependenciesException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -30,7 +31,7 @@ public class ValueInjector extends Injector {
                             setterMethod.invoke(bean.getValue(), castValue);
 
                         } catch (Exception e) {
-                            throw new RuntimeException("\"" + setterMethodName + "\" not found!", e);
+                            throw new BeanInjectDependenciesException("\"" + setterMethodName + "\" not found!", e);
                         }
                     }
                 }
@@ -60,7 +61,7 @@ public class ValueInjector extends Injector {
         } else if (parameter == Byte.class) {
             return Byte.parseByte(value);
         } else {
-            throw new RuntimeException("Unknown parameter type: \"" + value + "\"");
+            throw new BeanInjectDependenciesException("Unknown parameter type: \"" + value + "\"");
         }
     }
 }

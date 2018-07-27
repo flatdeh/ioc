@@ -1,6 +1,7 @@
 package com.vlad.ioc.context;
 
 import com.vlad.ioc.entity.BeanDefinition;
+import com.vlad.ioc.exception.BeanInstantiationException;
 import com.vlad.ioc.injector.RefInjector;
 import com.vlad.ioc.injector.ValueInjector;
 import com.vlad.ioc.reader.BeanDefinitionReader;
@@ -72,7 +73,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
             String beanId = beanDefinition.getId();
 
             if (getBean(beanId) != null) {
-                throw new RuntimeException("Error create bean with id= " + beanId + ", bean with this id already exist");
+                throw new BeanInstantiationException("Error create bean with id= " + beanId + ", bean with this id already exist");
             }
 
             Bean bean = new Bean();
@@ -83,11 +84,11 @@ public class ClassPathApplicationContext implements ApplicationContext {
                 Object objFromBeanClassName = Class.forName(beanClassName).newInstance();
                 bean.setValue(objFromBeanClassName);
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException("Class " + beanClassName + " not found!", e);
+                throw new BeanInstantiationException("Class " + beanClassName + " not found!", e);
             } catch (IllegalAccessException e) {
-                throw new RuntimeException("Class " + beanClassName + " illegal access exception!", e);
+                throw new BeanInstantiationException("Class " + beanClassName + " illegal access exception!", e);
             } catch (InstantiationException e) {
-                throw new RuntimeException("Class " + beanClassName + " instantiation exception!", e);
+                throw new BeanInstantiationException("Class " + beanClassName + " instantiation exception!", e);
             }
             beans.add(bean);
         }

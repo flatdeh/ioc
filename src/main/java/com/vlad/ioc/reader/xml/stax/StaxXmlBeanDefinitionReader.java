@@ -1,6 +1,7 @@
 package com.vlad.ioc.reader.xml.stax;
 
 import com.vlad.ioc.entity.BeanDefinition;
+import com.vlad.ioc.exception.BeanParseException;
 import com.vlad.ioc.reader.BeanDefinitionReader;
 
 import javax.xml.namespace.QName;
@@ -46,7 +47,7 @@ public class StaxXmlBeanDefinitionReader implements BeanDefinitionReader {
                                 beanDefinition.setBeanClassName(attributeByName.getValue());
                             } else {
                                 attributeByName = startElement.getAttributeByName(new QName("id"));
-                                throw new RuntimeException("Can't find bean class, in XML file" + path + ", for bean id= " + attributeByName);
+                                throw new BeanParseException("Can't find bean class, in XML file" + path + ", for bean id= " + attributeByName);
                             }
 
                             attributeByName = startElement.getAttributeByName(new QName("id"));
@@ -68,12 +69,10 @@ public class StaxXmlBeanDefinitionReader implements BeanDefinitionReader {
                                 } else if (nameAttr != null && refAttr != null) {
                                     refDependenciesMap.put(nameAttr.getValue(), refAttr.getValue());
                                 } else {
-                                    //todo: add custom bean parse excepton
-                                    throw new RuntimeException("Property attribute not correct, in XML file" + path);
+                                    throw new BeanParseException("Property attribute not correct, in XML file" + path);
                                 }
                             } else {
-                                //todo: add custom bean parse excepton
-                                throw new RuntimeException("Can't find bean for property " +
+                                throw new BeanParseException("Can't find bean for property " +
                                         xmlTagName + " in XML file: " + path);
                             }
                         }

@@ -2,6 +2,7 @@ package com.vlad.ioc.injector;
 
 import com.vlad.ioc.entity.Bean;
 import com.vlad.ioc.entity.BeanDefinition;
+import com.vlad.ioc.exception.BeanInjectDependenciesException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -28,18 +29,18 @@ public class RefInjector extends Injector {
                             Bean refBean = getBean(beans, ref);
                             Object refBeanValue = refBean.getValue();
                             if (refBeanValue == null) {
-                                throw new RuntimeException("Bean with id= " + ref + " not found!");
+                                throw new BeanInjectDependenciesException("Bean with id= " + ref + " not found!");
                             }
 
                             if (parameter == refBeanValue.getClass()) {
                                 Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
                                 setterMethod.invoke(bean.getValue(), refBeanValue);
                             } else {
-                                throw new RuntimeException("Can't invoke method \"" + setterMethodName + "\", different classes");
+                                throw new BeanInjectDependenciesException("Can't invoke method \"" + setterMethodName + "\", different classes");
                             }
 
                         } catch (Exception e) {
-                            throw new RuntimeException("\"" + setterMethodName + "\" not found!");
+                            throw new BeanInjectDependenciesException("\"" + setterMethodName + "\" not found!");
                         }
                     }
                 }

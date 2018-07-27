@@ -1,6 +1,7 @@
 package com.vlad.ioc.reader.xml.sax;
 
 import com.vlad.ioc.entity.BeanDefinition;
+import com.vlad.ioc.exception.BeanParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class SaxXmlParser extends DefaultHandler {
             if (clazz != null) {
                 beanDefinition.setBeanClassName(clazz);
             } else {
-                throw new RuntimeException("Can't find class, in XML file: " + path + ", for bean id= " + id);
+                throw new BeanParseException("Can't find class, in XML file: " + path + ", for bean id= " + id);
             }
 
             if (id != null) {
@@ -49,10 +50,10 @@ public class SaxXmlParser extends DefaultHandler {
                 } else if (name != null && ref != null && value == null) {
                     refDependenciesMap.put(name, ref);
                 } else {
-                    throw new RuntimeException("Property attribute not correct, in XML file: " + path);
+                    throw new BeanParseException("Property attribute not correct, in XML file: " + path);
                 }
             } else {
-                throw new RuntimeException("Can't find bean for property in XML file: " + path);
+                throw new BeanParseException("Can't find bean for property in XML file: " + path);
             }
         }
     }
