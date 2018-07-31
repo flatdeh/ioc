@@ -34,16 +34,15 @@ public class SaxXmlBeanDefinitionsReader implements BeanDefinitionReader {
             saxXmlParser.setPath(path);
             File xmlFile = new File(path);
 
-            SAXParser parser = null;
             try {
-                parser = factory.newSAXParser();
+                SAXParser saxParser = factory.newSAXParser();
                 try {
-                    parser.parse(xmlFile, saxXmlParser);
+                    saxParser.parse(xmlFile, saxXmlParser);
                 } catch (IOException e) {
-                    throw new RuntimeException("Can't read XML file: " + path);
+                    throw new RuntimeException("Can't read XML file: " + path, e);
                 }
             } catch (ParserConfigurationException | SAXException e) {
-                throw new RuntimeException("Can't parse XML file: " + path);
+                throw new RuntimeException("Can't parse XML file: " + path, e);
             }
 
         }

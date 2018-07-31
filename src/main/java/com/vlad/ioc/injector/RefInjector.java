@@ -12,8 +12,7 @@ import java.util.Map;
 public class RefInjector extends Injector {
     @Override
     public void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Bean refBean = getBean(beans, value);
-        Object refBeanValue = refBean.getValue();
+        Object refBeanValue = getBean(beans, value);
         if (refBeanValue == null) {
             throw new BeanInjectDependenciesException("Bean with id= " + value + " not found!");
         }

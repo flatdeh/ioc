@@ -1,5 +1,6 @@
 package com.vlad.ioc.context;
 
+import com.vlad.ioc.exception.BeanNotFoundExcepton;
 import com.vlad.ioc.entity.BeanDefinition;
 import com.vlad.ioc.exception.BeanInstantiationException;
 import com.vlad.ioc.exception.NotUniqueBeanException;
@@ -26,15 +27,19 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
     public void start() {
-        parseBeanDefinitionsFromBeanDefinitionReader();
-        createBeansFromBeanDefinitions();
+        if (reader!=null) {
+            parseBeanDefinitionsFromBeanDefinitionReader();
+            createBeansFromBeanDefinitions();
 
-        new ValueInjector().inject(beanDefinitions, beans);
-        new RefInjector().inject(beanDefinitions, beans);
+            new ValueInjector().inject(beanDefinitions, beans);
+            new RefInjector().inject(beanDefinitions, beans);
+        } else {
+            throw new RuntimeException("Set BeanDefinitionReader for ClassPathApplicationContext!");
+        }
     }
 
     public <T> T getBean(Class<T> clazz) {
-        T resultBeanValue =null;
+        T resultBeanValue = null;
         boolean isFound = false;
         for (Bean bean : beans) {
             if (bean.getValue().getClass().equals(clazz)) {
@@ -42,12 +47,15 @@ public class ClassPathApplicationContext implements ApplicationContext {
                     resultBeanValue = clazz.cast(bean.getValue());
                     isFound = true;
                 } else {
-                    throw new NotUniqueBeanException("Beans with class:" + clazz + ", more than one!");
+                    throw new NotUniqueBeanException("Beans with class: " + clazz + ", more than one!");
                 }
-
             }
         }
-        return resultBeanValue;
+        if (isFound) {
+            return resultBeanValue;
+        } else {
+            throw new BeanNotFoundExcepton("Bean with class= " + clazz + ", not found!");
+        }
     }
 
     public <T> T getBean(String id, Class<T> clazz) {
@@ -56,7 +64,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
                 return clazz.cast(bean.getValue());
             }
         }
-        return null;
+        throw new BeanNotFoundExcepton("Bean with class= " + clazz + " and id= " + id + ", not found!");
     }
 
     public <T> T getBean(String id) {
@@ -65,7 +73,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
                 return (T) bean.getValue();
             }
         }
-        return null;
+        throw new BeanNotFoundExcepton("Bean with id= " + id + ", not found!");
     }
 
     public List<String> getBeanNames() {
@@ -81,11 +89,11 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
 
-    public void createBeansFromBeanDefinitions() {
+    private void createBeansFromBeanDefinitions() {
         for (BeanDefinition beanDefinition : beanDefinitions) {
             String beanId = beanDefinition.getId();
 
-            if (getBean(beanId) != null) {
+            if (isExist(beanId)) {
                 throw new BeanInstantiationException("Error create bean with id= " + beanId + ", bean with this id already exist");
             }
 
@@ -105,6 +113,15 @@ public class ClassPathApplicationContext implements ApplicationContext {
             }
             beans.add(bean);
         }
+    }
+
+    private boolean isExist(String beanId) {
+        for (Bean bean : beans) {
+            if (bean.getId().equals(beanId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void setReader(BeanDefinitionReader reader) {

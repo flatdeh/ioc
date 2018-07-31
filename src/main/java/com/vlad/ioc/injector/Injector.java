@@ -38,7 +38,7 @@ public abstract class Injector {
 
     public abstract Map<String, String> getDependenciesMap(BeanDefinition beanDefinition);
 
-    String createSetterMethodName(String field) {
+    private String createSetterMethodName(String field) {
         return "set" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
     }
 }

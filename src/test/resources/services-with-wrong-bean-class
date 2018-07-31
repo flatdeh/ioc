@@ -1,0 +1,20 @@
+<beans>
+    <bean id="emailService" class="com.vlad.ioc.service.EmailService">
+        <property name="protocol" value="POP3"/>
+        <property name="port" value="3000"/>
+    </bean>
+
+    <bean id="paymentWithMaxAmountService" class="com.vlad.ioc.service.PaymentService">
+        <property name="maxAmount" value="5000"/>
+        <property name="emailService" ref="emailService"/>
+    </bean>
+
+    <bean id="paymentService" class="com.vlad.ioc.service.PaymentService">
+        <property name="emailService" ref="emailService"/>
+    </bean>
+
+    <bean id="userService" class="com.vlad.ioc.service.WrongService">
+        <property name="login" value="UserLogin"/>
+        <property name="emailService" ref="emailService"/>
+    </bean>
+</beans>
