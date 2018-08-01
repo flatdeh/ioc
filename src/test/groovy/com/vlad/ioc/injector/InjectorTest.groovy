@@ -35,7 +35,7 @@ class InjectorTest extends GroovyTestCase {
         assert beans.get(2).value.getProperties().get('emailService').getClass() == EmailService.class
         assert beans.get(3).value.getProperties().get('emailService').getClass() == EmailService.class
     }
-    
+
     static List<BeanDefinition> beanDefinitionsList() {
         def beanDefinitions = new ArrayList<>()
 

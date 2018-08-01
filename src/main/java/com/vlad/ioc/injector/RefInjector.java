@@ -11,10 +11,10 @@ import java.util.Map;
 
 public class RefInjector extends Injector {
     @Override
-    public void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Object refBeanValue = getBean(beans, value);
+    public void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String beanRefId) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Object refBeanValue = getBean(beans, beanRefId);
         if (refBeanValue == null) {
-            throw new BeanInjectDependenciesException("Bean with id= " + value + " not found!");
+            throw new BeanInjectDependenciesException("Bean with id= " + beanRefId + " not found!");
         }
 
         if (parameter == refBeanValue.getClass()) {
