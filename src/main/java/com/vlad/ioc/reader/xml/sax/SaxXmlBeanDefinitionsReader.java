@@ -46,7 +46,7 @@ public class SaxXmlBeanDefinitionsReader implements BeanDefinitionReader {
             }
 
         }
-        return saxXmlParser.getBeanDefinitionList();
+        return saxXmlParser.getBeanDefinitions();
     }
 
 }

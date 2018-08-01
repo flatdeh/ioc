@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SaxXmlParser extends DefaultHandler {
-    private List<BeanDefinition> beanDefinitionList = new ArrayList<>();
+    private List<BeanDefinition> beanDefinitions = new ArrayList<>();
     private BeanDefinition beanDefinition = null;
     private Map<String, String> valueDependenciesMap = null;
     private Map<String, String> refDependenciesMap = null;
@@ -64,13 +64,13 @@ public class SaxXmlParser extends DefaultHandler {
             if (beanDefinition != null) {
                 beanDefinition.setDependencies(valueDependenciesMap);
                 beanDefinition.setRefDependencies(refDependenciesMap);
+                beanDefinitions.add(beanDefinition);
             }
-            beanDefinitionList.add(beanDefinition);
         }
     }
 
-    public List<BeanDefinition> getBeanDefinitionList() {
-        return beanDefinitionList;
+    public List<BeanDefinition> getBeanDefinitions() {
+        return beanDefinitions;
     }
 
     public void setPath(String path) {
