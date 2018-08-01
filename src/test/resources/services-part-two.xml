@@ -1,0 +1,6 @@
+<beans>
+    <bean id="emailServiceSMTP" class="com.vlad.ioc.service.EmailService">
+        <property name="protocol" value="SMTP"/>
+        <property name="port" value="8080"/>
+    </bean>
+</beans>
