@@ -25,8 +25,12 @@ public abstract class Injector {
                             Class<?> parameter = classField.getType();
 
                             injectDependencies(beans, bean, parameter, setterMethodName, value);
-                        } catch (Exception e) {
-                            throw new BeanInjectDependenciesException("\"" + setterMethodName + "\" not found!", e);
+                        } catch (NoSuchMethodException e) {
+                            throw new BeanInjectDependenciesException("Method \"" + setterMethodName + "\" in class: " + value + ", not found!", e);
+                        } catch (InvocationTargetException | IllegalAccessException e) {
+                            throw new BeanInjectDependenciesException("Can't invoke method \"" + setterMethodName + "\" in class: " + value, e);
+                        } catch (NoSuchFieldException e) {
+                            throw new BeanInjectDependenciesException("Field \"" + field + "\" in class: " + value + ", not found!", e);
                         }
                     }
                 }
