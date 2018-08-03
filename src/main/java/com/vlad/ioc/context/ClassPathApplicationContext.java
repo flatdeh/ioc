@@ -42,7 +42,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
             postProcessBeforeInitialization();
             runInitMethods();
             postProcessAfterInitialization();
-            
+
         } else {
             throw new RuntimeException("Set BeanDefinitionReader for ClassPathApplicationContext!");
         }
@@ -64,8 +64,11 @@ public class ClassPathApplicationContext implements ApplicationContext {
                     try {
                         Method postProcessInitializationMethod =
                                 bean.getValue().getClass().getMethod(postProcessInitialization, Object.class, String.class);
-                        Object newBeanValue = postProcessInitializationMethod.invoke(bean.getValue(), bean.getValue(), bean.getId());
-                        bean.setValue(newBeanValue);
+
+                        for (Bean beanForPostProcess : beans) {
+                            Object newBeanValue = postProcessInitializationMethod.invoke(bean.getValue(), beanForPostProcess.getValue(), beanForPostProcess.getId());
+                            beanForPostProcess.setValue(newBeanValue);
+                        }
                     } catch (NoSuchMethodException e) {
                         throw new RuntimeException("Method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass() + ", not found!", e);
                     } catch (InvocationTargetException | IllegalAccessException e) {
