@@ -33,40 +33,47 @@ public class ClassPathApplicationContext implements ApplicationContext {
     public void start() {
         if (reader != null) {
             parseBeanDefinitionsFromBeanDefinitionReader();
+
             createBeansFromBeanDefinitions();
 
             new ValueInjector(beanDefinitions, beans).inject();
             new RefInjector(beanDefinitions, beans).inject();
 
             postProcessBeforeInitialization();
-
             runInitMethods();
+            postProcessAfterInitialization();
+            
         } else {
             throw new RuntimeException("Set BeanDefinitionReader for ClassPathApplicationContext!");
         }
     }
 
+    private void postProcessAfterInitialization() {
+        postProcess("postProcessAfterInitialization");
+    }
+
     private void postProcessBeforeInitialization() {
+        postProcess("postProcessBeforeInitialization");
+    }
+
+    private void postProcess(String postProcessInitialization) {
         for (Bean bean : beans) {
             Class<?>[] beanInterfaces = bean.getValue().getClass().getInterfaces();
             for (Class<?> beanInterface : beanInterfaces) {
                 if (BeanPostProcessor.class.equals(beanInterface)) {
                     try {
-                        Method postProcessBeforeInitialization =
-                                bean.getValue().getClass().getMethod("postProcessBeforeInitialization", Object.class, String.class);
-                        Object newBeanValue = postProcessBeforeInitialization.invoke(bean.getValue(), bean.getValue(), bean.getId());
+                        Method postProcessInitializationMethod =
+                                bean.getValue().getClass().getMethod(postProcessInitialization, Object.class, String.class);
+                        Object newBeanValue = postProcessInitializationMethod.invoke(bean.getValue(), bean.getValue(), bean.getId());
                         bean.setValue(newBeanValue);
                     } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException("Method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass() + ", not found!", e);
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        throw new RuntimeException("Can't invoke method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass(), e);
                     }
                 }
             }
         }
-
     }
 
     private void runInitMethods() {
