@@ -1,6 +1,5 @@
 package com.vlad.ioc.context
 
-import com.vlad.ioc.exception.BeanInstantiationException
 import com.vlad.ioc.exception.BeanNotFoundExcepton
 import com.vlad.ioc.exception.NotUniqueBeanException
 import com.vlad.ioc.service.EmailService
@@ -95,18 +94,11 @@ class ClassPathApplicationContextTest {
         }
     }
 
-    @Test
-    void testCreateBeansFromBeanDefinitionsWithTwoSameIdBeanInstantiationException() {
-        expectedEx.expect(BeanInstantiationException.class)
-        expectedEx.expectMessage("Error create bean with id= paymentService, bean with this id already exist")
-
-        new ClassPathApplicationContext("src/test/resources/services-with-two-same-id.xml")
-    }
 
     @Test
     void testCreateBeansFromBeanDefinitionsWithWrongBeanClassBeanInstantiationException() {
-        expectedEx.expect(BeanInstantiationException.class)
-        expectedEx.expectMessage("Class com.vlad.ioc.service.WrongService not found!")
+        expectedEx.expect(RuntimeException.class)
+        expectedEx.expectMessage("Can't create bean of class: \"com.vlad.ioc.service.WrongService\"")
 
         new ClassPathApplicationContext("src/test/resources/services-with-wrong-bean-class")
     }

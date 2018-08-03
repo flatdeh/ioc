@@ -7,7 +7,7 @@ public interface ApplicationContext {
 
     <T> T getBean(String id, Class<T> clazz);
 
-    <T> T getBean(String id);
+    Object getBean(String id);
 
     List<String> getBeanNames();
 }

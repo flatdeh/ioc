@@ -7,13 +7,13 @@ import com.vlad.ioc.service.PaymentService
 import com.vlad.ioc.service.UserService
 import org.junit.Test
 
-class InjectorTest extends GroovyTestCase {
+class InjectorTest {
     @Test
     void testInjectValueDependency() {
-        def injector = new ValueInjector()
         def beanDefinitions = beanDefinitionsList()
         def beans = beansList()
-        injector.inject(beanDefinitions, beans)
+        def injector = new ValueInjector(beanDefinitions, beans)
+        injector.inject()
 
         assert beans.get(0).value.getProperties().get('protocol') == "POP3"
         assert beans.get(0).value.getProperties().get('port') == 3000
@@ -26,10 +26,10 @@ class InjectorTest extends GroovyTestCase {
 
     @Test
     void testInjectRefDependency() {
-        def injector = new RefInjector()
         def beanDefinitions = beanDefinitionsList()
         def beans = beansList()
-        injector.inject(beanDefinitions, beans)
+        def injector = new RefInjector(beanDefinitions, beans)
+        injector.inject()
 
         assert beans.get(1).value.getProperties().get('emailService').getClass() == EmailService.class
         assert beans.get(2).value.getProperties().get('emailService').getClass() == EmailService.class

@@ -51,7 +51,7 @@ public class SaxXmlParser extends DefaultHandler {
                 Map<String, String> valueDependenciesMap = beanDefinitions.get(beanDefinitions.size() - 1).getDependencies();
                 valueDependenciesMap.put(name, value);
             } else if (name != null && ref != null && value == null) {
-                Map<String, String> refDependenciesMap = beanDefinitions.get(beanDefinitions.size() - 1).getRefDependencies();
+                Map<String, String> refDependenciesMap = beanDefinitions.get(beanDefinitions.size() - 1).getDependencies();
                 refDependenciesMap.put(name, ref);
             } else {
                 throw new BeanParseException("Property attribute not correct, in XML file: " + path);

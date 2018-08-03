@@ -10,11 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 public class ValueInjector extends Injector {
+    public ValueInjector(List<BeanDefinition> beanDefinitions, List<Bean> beans) {
+        super(beanDefinitions, beans);
+    }
+
     @Override
-    public void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
-        Object castValue = castValueToParameterType(parameter, value);
-        setterMethod.invoke(bean.getValue(), castValue);
+    public void injectDependencies(Object beanValue, Method setterMethod, String value) throws InvocationTargetException, IllegalAccessException {
+        Object castValue = castValueToParameterType(setterMethod.getParameterTypes()[0], value);
+        setterMethod.invoke(beanValue, castValue);
     }
 
     @Override

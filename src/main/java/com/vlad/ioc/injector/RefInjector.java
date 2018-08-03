@@ -10,19 +10,17 @@ import java.util.List;
 import java.util.Map;
 
 public class RefInjector extends Injector {
-    @Override
-    public void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String beanRefId) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Object refBeanValue = getBean(beans, beanRefId);
-        if (refBeanValue == null) {
-            throw new BeanInjectDependenciesException("Bean with id= " + beanRefId + " not found!");
-        }
+    private List<Bean> beans;
 
-        if (parameter == refBeanValue.getClass()) {
-            Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
-            setterMethod.invoke(bean.getValue(), refBeanValue);
-        } else {
-            throw new BeanInjectDependenciesException("Can't invoke method \"" + setterMethodName + "\", different classes");
-        }
+    public RefInjector(List<BeanDefinition> beanDefinitions, List<Bean> beans) {
+        super(beanDefinitions, beans);
+        this.beans = beans;
+    }
+
+    @Override
+    public void injectDependencies(Object beanValue, Method setterMethod, String beanRefId) throws InvocationTargetException, IllegalAccessException {
+        Object refBeanValue = getBean(beans, beanRefId);
+        setterMethod.invoke(beanValue, refBeanValue);
     }
 
     @Override
@@ -30,12 +28,12 @@ public class RefInjector extends Injector {
         return beanDefinition.getRefDependencies();
     }
 
-    private <T> T getBean(List<Bean> beans, String id) {
+    private Object getBean(List<Bean> beans, String id) {
         for (Bean bean : beans) {
             if (bean.getId().equals(id)) {
-                return (T) bean.getValue();
+                return bean.getValue();
             }
         }
-        return null;
+        throw new BeanInjectDependenciesException("Bean with id= " + id + " not found!");
     }
 }

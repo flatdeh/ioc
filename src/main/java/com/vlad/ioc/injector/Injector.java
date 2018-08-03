@@ -6,11 +6,20 @@ import com.vlad.ioc.exception.BeanInjectDependenciesException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 
 public abstract class Injector {
-    public void inject(List<BeanDefinition> beanDefinitions, List<Bean> beans) {
+    private List<BeanDefinition> beanDefinitions;
+    private List<Bean> beans;
+
+    public Injector(List<BeanDefinition> beanDefinitions, List<Bean> beans) {
+        this.beanDefinitions = beanDefinitions;
+        this.beans = beans;
+    }
+
+    public void inject() {
         for (BeanDefinition beanDefinition : beanDefinitions) {
             for (Bean bean : beans) {
                 if (beanDefinition.getId().equals(bean.getId())) {
@@ -24,7 +33,10 @@ public abstract class Injector {
                             Field classField = bean.getValue().getClass().getDeclaredField(field);
                             Class<?> parameter = classField.getType();
 
-                            injectDependencies(beans, bean, parameter, setterMethodName, value);
+                            Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
+                            Object beanValue = bean.getValue();
+
+                            injectDependencies(beanValue, setterMethod, value);
                         } catch (NoSuchMethodException e) {
                             throw new BeanInjectDependenciesException("Method \"" + setterMethodName + "\" in class: " + value + ", not found!", e);
                         } catch (InvocationTargetException | IllegalAccessException e) {
@@ -38,7 +50,7 @@ public abstract class Injector {
         }
     }
 
-    public abstract void injectDependencies(List<Bean> beans, Bean bean, Class<?> parameter, String setterMethodName, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException;
+    public abstract void injectDependencies(Object beanValue, Method setterMethod, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException;
 
     public abstract Map<String, String> getDependenciesMap(BeanDefinition beanDefinition);
 

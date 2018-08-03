@@ -1,8 +1,8 @@
 package com.vlad.ioc.context;
 
+import com.vlad.ioc.BeanPostProcessor;
 import com.vlad.ioc.exception.BeanNotFoundExcepton;
 import com.vlad.ioc.entity.BeanDefinition;
-import com.vlad.ioc.exception.BeanInstantiationException;
 import com.vlad.ioc.exception.NotUniqueBeanException;
 import com.vlad.ioc.injector.RefInjector;
 import com.vlad.ioc.injector.ValueInjector;
@@ -10,7 +10,11 @@ import com.vlad.ioc.reader.BeanDefinitionReader;
 import com.vlad.ioc.entity.Bean;
 import com.vlad.ioc.reader.xml.sax.SaxXmlBeanDefinitionsReader;
 
+import javax.annotation.PostConstruct;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ClassPathApplicationContext implements ApplicationContext {
@@ -27,14 +31,56 @@ public class ClassPathApplicationContext implements ApplicationContext {
     }
 
     public void start() {
-        if (reader!=null) {
+        if (reader != null) {
             parseBeanDefinitionsFromBeanDefinitionReader();
             createBeansFromBeanDefinitions();
 
-            new ValueInjector().inject(beanDefinitions, beans);
-            new RefInjector().inject(beanDefinitions, beans);
+            new ValueInjector(beanDefinitions, beans).inject();
+            new RefInjector(beanDefinitions, beans).inject();
+
+            postProcessBeforeInitialization();
+
+            runInitMethods();
         } else {
             throw new RuntimeException("Set BeanDefinitionReader for ClassPathApplicationContext!");
+        }
+    }
+
+    private void postProcessBeforeInitialization() {
+        for (Bean bean : beans) {
+            Class<?>[] beanInterfaces = bean.getValue().getClass().getInterfaces();
+            for (Class<?> beanInterface : beanInterfaces) {
+                if (BeanPostProcessor.class.equals(beanInterface)) {
+                    try {
+                        Method postProcessBeforeInitialization =
+                                bean.getValue().getClass().getMethod("postProcessBeforeInitialization", Object.class, String.class);
+                        Object newBeanValue = postProcessBeforeInitialization.invoke(bean.getValue(), bean.getValue(), bean.getId());
+                        bean.setValue(newBeanValue);
+                    } catch (NoSuchMethodException e) {
+                        e.printStackTrace();
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+
+    }
+
+    private void runInitMethods() {
+        for (Bean bean : beans) {
+            Method[] methods = bean.getValue().getClass().getMethods();
+            for (Method method : methods) {
+                if (method.isAnnotationPresent(PostConstruct.class)) {
+                    try {
+                        method.invoke(bean.getValue(), (Object[]) null);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException("Can't invoke method: " + method + ", in class: " + bean.getValue().getClass() + "!", e);
+                    }
+                }
+            }
         }
     }
 
@@ -67,10 +113,10 @@ public class ClassPathApplicationContext implements ApplicationContext {
         throw new BeanNotFoundExcepton("Bean with class= " + clazz + " and id= " + id + ", not found!");
     }
 
-    public <T> T getBean(String id) {
+    public Object getBean(String id) {
         for (Bean bean : beans) {
             if (bean.getId().equals(id)) {
-                return (T) bean.getValue();
+                return bean.getValue();
             }
         }
         throw new BeanNotFoundExcepton("Bean with id= " + id + ", not found!");
@@ -93,9 +139,6 @@ public class ClassPathApplicationContext implements ApplicationContext {
         for (BeanDefinition beanDefinition : beanDefinitions) {
             String beanId = beanDefinition.getId();
 
-            if (isExist(beanId)) {
-                throw new BeanInstantiationException("Error create bean with id= " + beanId + ", bean with this id already exist");
-            }
 
             Bean bean = new Bean();
             bean.setId(beanId);
@@ -104,25 +147,13 @@ public class ClassPathApplicationContext implements ApplicationContext {
             try {
                 Object objFromBeanClassName = Class.forName(beanClassName).newInstance();
                 bean.setValue(objFromBeanClassName);
-            } catch (ClassNotFoundException e) {
-                throw new BeanInstantiationException("Class " + beanClassName + " not found!", e);
-            } catch (IllegalAccessException e) {
-                throw new BeanInstantiationException("Class " + beanClassName + " illegal access exception!", e);
-            } catch (InstantiationException e) {
-                throw new BeanInstantiationException("Class " + beanClassName + " instantiation exception!", e);
+            } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+                throw new RuntimeException("Can't create bean of class: \"" + beanClassName + "\"", e);
             }
             beans.add(bean);
         }
     }
 
-    private boolean isExist(String beanId) {
-        for (Bean bean : beans) {
-            if (bean.getId().equals(beanId)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     public void setReader(BeanDefinitionReader reader) {
         this.reader = reader;

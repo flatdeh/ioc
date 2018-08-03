@@ -1,6 +1,9 @@
 package com.vlad.ioc.service;
 
-public class PaymentService {
+import com.vlad.ioc.BeanPostProcessor;
+import com.vlad.ioc.exception.BeanInstantiationException;
+
+public class PaymentService implements BeanPostProcessor {
     private EmailService emailService;
     private int maxAmount;
 
@@ -18,5 +21,15 @@ public class PaymentService {
 
     public void setMaxAmount(int maxAmount) {
         this.maxAmount = maxAmount;
+    }
+
+    @Override
+    public Object postProcessBeforeInitialization(Object bean, String id) throws BeanInstantiationException {
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(Object bean, String id) throws BeanInstantiationException {
+        return bean;
     }
 }
