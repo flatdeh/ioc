@@ -1,5 +1,6 @@
 package com.vlad.ioc.context;
 
+import com.vlad.ioc.BeanFactoryPostProcessor;
 import com.vlad.ioc.BeanPostProcessor;
 import com.vlad.ioc.exception.BeanNotFoundExcepton;
 import com.vlad.ioc.entity.BeanDefinition;
@@ -14,7 +15,6 @@ import javax.annotation.PostConstruct;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ClassPathApplicationContext implements ApplicationContext {
@@ -34,6 +34,8 @@ public class ClassPathApplicationContext implements ApplicationContext {
         if (reader != null) {
             parseBeanDefinitionsFromBeanDefinitionReader();
 
+            beanFactoryPostProcessor();
+
             createBeansFromBeanDefinitions();
 
             new ValueInjector(beanDefinitions, beans).inject();
@@ -46,6 +48,42 @@ public class ClassPathApplicationContext implements ApplicationContext {
         } else {
             throw new RuntimeException("Set BeanDefinitionReader for ClassPathApplicationContext!");
         }
+    }
+
+    private void beanFactoryPostProcessor() {
+        for (BeanDefinition beanDefinition : beanDefinitions) {
+
+            Class<?> beanDefinitionClass;
+            try {
+                beanDefinitionClass = Class.forName(beanDefinition.getBeanClassName());
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Class: " + beanDefinition.getBeanClassName()
+                        + " with bean id= " + beanDefinition.getId() + ", not found");
+            }
+
+            Class<?>[] beanDefinitionInterfaces = beanDefinitionClass.getInterfaces();
+
+            for (Class<?> beanDefinitionInterface : beanDefinitionInterfaces) {
+                if (BeanFactoryPostProcessor.class.equals(beanDefinitionInterface)) {
+                    try {
+                        Method postProcessFactoryMethod = beanDefinitionClass.getMethod("postProcessBeanFactory", List.class);
+
+                        Object createBeanDefClass = beanDefinitionClass.newInstance();
+
+                        postProcessFactoryMethod.invoke(createBeanDefClass, beanDefinitions);
+                    } catch (NoSuchMethodException e) {
+                        throw new RuntimeException("Method \"" + "postProcessBeanFactory"
+                                + "\" in class: " + beanDefinitionClass + ", not found!", e);
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        throw new RuntimeException("Can't invoke method \""
+                                + "postProcessBeanFactory" + "\" in class: " + beanDefinitionClass, e);
+                    } catch (InstantiationException e) {
+                        throw new RuntimeException("Can't create instance for class: " + beanDefinition.getBeanClassName(), e);
+                    }
+                }
+            }
+        }
+
     }
 
     private void postProcessAfterInitialization() {

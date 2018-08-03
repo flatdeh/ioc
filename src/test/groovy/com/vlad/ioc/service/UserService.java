@@ -1,8 +1,12 @@
 package com.vlad.ioc.service;
 
-import javax.annotation.PostConstruct;
+import com.vlad.ioc.BeanFactoryPostProcessor;
+import com.vlad.ioc.entity.BeanDefinition;
 
-public class UserService {
+import javax.annotation.PostConstruct;
+import java.util.List;
+
+public class UserService implements BeanFactoryPostProcessor {
     private String login;
     private EmailService emailService;
 
@@ -25,5 +29,10 @@ public class UserService {
 
     public void setEmailService(EmailService emailService) {
         this.emailService = emailService;
+    }
+
+    @Override
+    public void postProcessBeanFactory(List<BeanDefinition> definitions) {
+
     }
 }
