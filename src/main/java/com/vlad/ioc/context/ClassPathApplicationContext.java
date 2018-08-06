@@ -1,7 +1,7 @@
 package com.vlad.ioc.context;
 
-import com.vlad.ioc.BeanFactoryPostProcessor;
-import com.vlad.ioc.BeanPostProcessor;
+import com.vlad.ioc.processor.BeanFactoryPostProcessor;
+import com.vlad.ioc.processor.BeanPostProcessor;
 import com.vlad.ioc.exception.BeanNotFoundExcepton;
 import com.vlad.ioc.entity.BeanDefinition;
 import com.vlad.ioc.exception.NotUniqueBeanException;
@@ -18,6 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClassPathApplicationContext implements ApplicationContext {
+    private static final String BEFORE_POST_METHOD = "postProcessBeforeInitialization";
+    private final static String AFTER_POST_METHOD = "postProcessAfterInitialization";
+
     private BeanDefinitionReader reader;
     private List<Bean> beans = new ArrayList<>();
     private List<BeanDefinition> beanDefinitions;
@@ -61,59 +64,45 @@ public class ClassPathApplicationContext implements ApplicationContext {
                         + " with bean id= " + beanDefinition.getId() + ", not found");
             }
 
-            Class<?>[] beanDefinitionInterfaces = beanDefinitionClass.getInterfaces();
-
-            for (Class<?> beanDefinitionInterface : beanDefinitionInterfaces) {
-                if (BeanFactoryPostProcessor.class.equals(beanDefinitionInterface)) {
-                    try {
-                        Method postProcessFactoryMethod = beanDefinitionClass.getMethod("postProcessBeanFactory", List.class);
-
-                        Object createBeanDefClass = beanDefinitionClass.newInstance();
-
-                        postProcessFactoryMethod.invoke(createBeanDefClass, beanDefinitions);
-                    } catch (NoSuchMethodException e) {
-                        throw new RuntimeException("Method \"" + "postProcessBeanFactory"
-                                + "\" in class: " + beanDefinitionClass + ", not found!", e);
-                    } catch (InvocationTargetException | IllegalAccessException e) {
-                        throw new RuntimeException("Can't invoke method \""
-                                + "postProcessBeanFactory" + "\" in class: " + beanDefinitionClass, e);
-                    } catch (InstantiationException e) {
-                        throw new RuntimeException("Can't create instance for class: " + beanDefinition.getBeanClassName(), e);
-                    }
+            if (beanDefinition.getBeanClassName().getClass().isAssignableFrom(BeanFactoryPostProcessor.class)) {
+                try {
+                    BeanFactoryPostProcessor createBeanDefClass = (BeanFactoryPostProcessor) beanDefinitionClass.newInstance();
+                    createBeanDefClass.postProcessBeanFactory(beanDefinitions);
+                } catch (InstantiationException | IllegalAccessException e) {
+                    throw new RuntimeException("Can't create instance for class: " + beanDefinition.getBeanClassName(), e);
                 }
             }
+
         }
 
     }
 
     private void postProcessAfterInitialization() {
-        postProcess("postProcessAfterInitialization");
+        postProcess(AFTER_POST_METHOD);
     }
 
     private void postProcessBeforeInitialization() {
-        postProcess("postProcessBeforeInitialization");
+        postProcess(BEFORE_POST_METHOD);
     }
 
     private void postProcess(String postProcessInitialization) {
         for (Bean bean : beans) {
-            Class<?>[] beanInterfaces = bean.getValue().getClass().getInterfaces();
-            for (Class<?> beanInterface : beanInterfaces) {
-                if (BeanPostProcessor.class.equals(beanInterface)) {
-                    try {
-                        Method postProcessInitializationMethod =
-                                bean.getValue().getClass().getMethod(postProcessInitialization, Object.class, String.class);
+            if (bean.getValue().getClass().isAssignableFrom(BeanPostProcessor.class)) {
+                try {
+                    Method postProcessInitializationMethod =
+                            bean.getValue().getClass().getMethod(postProcessInitialization, Object.class, String.class);
 
-                        for (Bean beanForPostProcess : beans) {
-                            Object newBeanValue = postProcessInitializationMethod.invoke(bean.getValue(), beanForPostProcess.getValue(), beanForPostProcess.getId());
-                            beanForPostProcess.setValue(newBeanValue);
-                        }
-                    } catch (NoSuchMethodException e) {
-                        throw new RuntimeException("Method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass() + ", not found!", e);
-                    } catch (InvocationTargetException | IllegalAccessException e) {
-                        throw new RuntimeException("Can't invoke method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass(), e);
+                    for (Bean beanForPostProcess : beans) {
+                        Object newBeanValue = postProcessInitializationMethod.invoke(bean.getValue(), beanForPostProcess.getValue(), beanForPostProcess.getId());
+                        beanForPostProcess.setValue(newBeanValue);
                     }
+                } catch (NoSuchMethodException e) {
+                    throw new RuntimeException("Method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass() + ", not found!", e);
+                } catch (InvocationTargetException | IllegalAccessException e) {
+                    throw new RuntimeException("Can't invoke method \"" + postProcessInitialization + "\" in class: " + bean.getValue().getClass(), e);
                 }
             }
+
         }
     }
 
@@ -187,7 +176,6 @@ public class ClassPathApplicationContext implements ApplicationContext {
         for (BeanDefinition beanDefinition : beanDefinitions) {
             String beanId = beanDefinition.getId();
 
-
             Bean bean = new Bean();
             bean.setId(beanId);
 
@@ -198,6 +186,8 @@ public class ClassPathApplicationContext implements ApplicationContext {
             } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                 throw new RuntimeException("Can't create bean of class: \"" + beanClassName + "\"", e);
             }
+
+
             beans.add(bean);
         }
     }

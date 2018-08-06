@@ -1,4 +1,4 @@
-package com.vlad.ioc;
+package com.vlad.ioc.processor;
 
 import com.vlad.ioc.exception.BeanInstantiationException;
 

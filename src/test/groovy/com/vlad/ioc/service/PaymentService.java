@@ -1,6 +1,6 @@
 package com.vlad.ioc.service;
 
-import com.vlad.ioc.BeanPostProcessor;
+import com.vlad.ioc.processor.BeanPostProcessor;
 import com.vlad.ioc.exception.BeanInstantiationException;
 
 public class PaymentService implements BeanPostProcessor {

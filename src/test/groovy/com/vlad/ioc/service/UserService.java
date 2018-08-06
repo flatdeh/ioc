@@ -1,6 +1,6 @@
 package com.vlad.ioc.service;
 
-import com.vlad.ioc.BeanFactoryPostProcessor;
+import com.vlad.ioc.processor.BeanFactoryPostProcessor;
 import com.vlad.ioc.entity.BeanDefinition;
 
 import javax.annotation.PostConstruct;
