@@ -7,34 +7,17 @@ import com.vlad.ioc.service.PaymentService
 import com.vlad.ioc.service.UserService
 import org.junit.Test
 
-class InjectorTest {
-    @Test
-    void testInjectValueDependency() {
-        def beanDefinitions = beanDefinitionsList()
-        def beans = beansList()
-        def injector = new ValueInjector(beanDefinitions, beans)
-        injector.inject()
+import java.beans.Beans
 
-        assert beans.get(0).value.getProperties().get('protocol') == "POP3"
-        assert beans.get(0).value.getProperties().get('port') == 3000
+abstract class InjectorTest {
+    def beanDefinitions = beanDefinitionsList()
+    def beans = beansList()
+    Injector injector = getInjector(beanDefinitions, beans)
 
-        assert beans.get(1).value.getProperties().get('maxAmount') == 5000
-
-        assert beans.get(3).value.getProperties().get('login') == "UserLogin"
-
-    }
+    abstract Injector getInjector(List<BeanDefinition> beanDef, List<Bean> b)
 
     @Test
-    void testInjectRefDependency() {
-        def beanDefinitions = beanDefinitionsList()
-        def beans = beansList()
-        def injector = new RefInjector(beanDefinitions, beans)
-        injector.inject()
-
-        assert beans.get(1).value.getProperties().get('emailService').getClass() == EmailService.class
-        assert beans.get(2).value.getProperties().get('emailService').getClass() == EmailService.class
-        assert beans.get(3).value.getProperties().get('emailService').getClass() == EmailService.class
-    }
+    abstract void testInject()
 
     static List<BeanDefinition> beanDefinitionsList() {
         def beanDefinitions = new ArrayList<>()
