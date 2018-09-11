@@ -7,8 +7,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,9 +39,9 @@ public class SaxXmlBeanDefinitionsReader implements BeanDefinitionReader {
                 SAXParser saxParser = factory.newSAXParser();
                 SaxXmlParser saxXmlParser = new SaxXmlParser();
                 saxXmlParser.setPath(path);
-                File xmlFile = new File(path);
-                try {
-                    saxParser.parse(xmlFile, saxXmlParser);
+                try (InputStream inputStream = SaxXmlBeanDefinitionsReader.class.getResourceAsStream(path);
+                     BufferedInputStream xmlBufferedInputStream = new BufferedInputStream(inputStream)) {
+                    saxParser.parse(xmlBufferedInputStream, saxXmlParser);
                     beanDefinitions.addAll(saxXmlParser.getBeanDefinitions());
                 } catch (IOException e) {
                     throw new RuntimeException("Can't read XML file: " + path, e);

@@ -7,8 +7,7 @@ import com.vlad.ioc.exception.BeanInjectDependenciesException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class Injector {
     private List<BeanDefinition> beanDefinitions;
@@ -30,25 +29,57 @@ public abstract class Injector {
 
                         String setterMethodName = createSetterMethodName(field);
                         try {
-                            Field classField = bean.getValue().getClass().getDeclaredField(field);
-                            Class<?> parameter = classField.getType();
+                            Class<?>[] parameter = null;
+                            Method[] methods = bean.getValue().getClass().getMethods();
+                            for (Method method : methods) {
+                                if (method.getName().equals(setterMethodName)) {
+                                    parameter = method.getParameterTypes();
+                                    break;
+                                }
+                            }
 
                             Method setterMethod = bean.getValue().getClass().getMethod(setterMethodName, parameter);
                             Object beanValue = bean.getValue();
-
                             injectDependencies(beanValue, setterMethod, value);
                         } catch (NoSuchMethodException e) {
                             throw new BeanInjectDependenciesException("Method \"" + setterMethodName + "\" in class: " + value + ", not found!", e);
                         } catch (InvocationTargetException | IllegalAccessException e) {
                             throw new BeanInjectDependenciesException("Can't invoke method \"" + setterMethodName + "\" in class: " + value, e);
-                        } catch (NoSuchFieldException e) {
-                            throw new BeanInjectDependenciesException("Field \"" + field + "\" in class: " + value + ", not found!", e);
-                        }
+                        } //catch (NoSuchFieldException e) {
+                          //  throw new BeanInjectDependenciesException("Field \"" + field + "\" in class: " + value + ", not found!", e);
+                        //}
                     }
                 }
             }
         }
     }
+
+    private static Class<?> getFieldClass(String fieldName, Class<?> clazz) {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field curField : fields) {
+            if (curField.getName().equals(fieldName)) {
+                return clazz;
+            }
+        }
+
+        if (clazz.getSuperclass() != null) {
+            return getFieldClass(fieldName, clazz.getSuperclass());
+        }
+        return null;
+    }
+
+    private static Map<Field, Class> getAllFields(Map<Field, Class> fieldsMap, Class<?> clazz) {
+        Field[] fields = clazz.getDeclaredFields();
+        for (Field curField : fields) {
+            fieldsMap.put(curField, clazz);
+        }
+
+        if (clazz.getSuperclass() != null) {
+            getAllFields(fieldsMap, clazz.getSuperclass());
+        }
+        return fieldsMap;
+    }
+
 
     public abstract void injectDependencies(Object beanValue, Method setterMethod, String value) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException;
 
