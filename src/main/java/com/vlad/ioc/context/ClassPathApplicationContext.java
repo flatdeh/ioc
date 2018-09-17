@@ -54,17 +54,17 @@ public class ClassPathApplicationContext implements ApplicationContext {
     private void beanFactoryPostProcessor() {
         for (BeanDefinition beanDefinition : beanDefinitions) {
             String beanClassName = beanDefinition.getBeanClassName();
-            if (beanClassName.getClass().isAssignableFrom(BeanFactoryPostProcessor.class)) {
-                try {
-                    Class<?> beanDefinitionClass = Class.forName(beanClassName);
+            try {
+                Class<?> beanDefinitionClass = Class.forName(beanClassName);
+                if (BeanFactoryPostProcessor.class.isAssignableFrom(beanDefinitionClass)) {
                     BeanFactoryPostProcessor createBeanDefClass = (BeanFactoryPostProcessor) beanDefinitionClass.newInstance();
                     createBeanDefClass.postProcessBeanFactory(beanDefinitions);
-                } catch (InstantiationException | IllegalAccessException e) {
-                    throw new RuntimeException("Can't create object: " + beanClassName, e);
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException("Class: " + beanClassName
-                            + " with bean id= " + beanDefinition.getId() + ", not found");
                 }
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException("Can't create object: " + beanClassName, e);
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Class: " + beanClassName
+                        + " with bean id= " + beanDefinition.getId() + ", not found");
             }
         }
     }
