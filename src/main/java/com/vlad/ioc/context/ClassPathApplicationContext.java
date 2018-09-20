@@ -26,7 +26,7 @@ public class ClassPathApplicationContext implements ApplicationContext {
     public ClassPathApplicationContext() {
     }
 
-    public ClassPathApplicationContext(String[] paths) {
+    public ClassPathApplicationContext(String... paths) {
         setReader(new SaxXmlBeanDefinitionsReader(paths));
         start();
     }
